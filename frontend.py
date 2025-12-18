@@ -24,7 +24,7 @@ if submitted and query:
         try:
           
             payload = {"query": query}
-            response = requests.post(API_URL, json=payload)
+            response = requests.post(f"{API_URL}/recommend", json=payload) 
             
             if response.status_code == 200:
                 results = response.json()
