@@ -4,15 +4,13 @@ streamlit
 python-dotenv
 pandas
 openpyxl
-langchain
 langchain-google-genai
+langchain-huggingface
 langchain-community
 langchain-pinecone
-langchain-huggingface
+langchain-core
 google-generativeai
 pinecone-client
 beautifulsoup4
 selenium
 webdriver-manager
-sentence-transformers
-torch
