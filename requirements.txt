@@ -8,6 +8,7 @@ langchain
 langchain-google-genai
 langchain-community
 langchain-pinecone
+langchain-huggingface
 google-generativeai
 pinecone-client
 beautifulsoup4
