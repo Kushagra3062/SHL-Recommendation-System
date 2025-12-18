@@ -6,8 +6,23 @@ from langchain_pinecone import PineconeVectorStore
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
 from pinecone import Pinecone
+from functools import lru_cache
 
 load_dotenv()
+
+
+@lru_cache(maxsize=1)
+def get_cached_embeddings():
+    print("Loading embedding model...")
+ 
+    model_path = "./model_cache"
+    if os.path.exists(model_path) and len(os.listdir(model_path)) > 0:
+        print(f"Found local model at {model_path}, loading from disk...")
+        return HuggingFaceEmbeddings(model_name=model_path)
+    else:
+        print("Local model not found, downloading from HuggingFace (Fallback)...")
+        
+        return HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 class SHLRecommender:
     def __init__(self):
@@ -16,9 +31,8 @@ class SHLRecommender:
         self.google_api_key = os.getenv("GOOGLE_API_KEY")
         
   
-        self.embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+        self.embeddings = get_cached_embeddings()
         
-    
         self.vectorstore = PineconeVectorStore(
             index_name=self.index_name,
             embedding=self.embeddings,
@@ -26,7 +40,7 @@ class SHLRecommender:
         )
         
         self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash",
+            model="gemini-2.5-flash", 
             temperature=0.0,
             max_tokens=200,
             google_api_key=self.google_api_key
@@ -59,7 +73,6 @@ class SHLRecommender:
             chain = prompt | self.llm
             response = chain.invoke({"query": query})
             
-
             content = response.content.strip()
             sub_queries = [s.strip() for s in content.split("|") if s.strip()]
             
@@ -70,17 +83,14 @@ class SHLRecommender:
             return [query]
 
     def get_recommendations(self, query, k=10):
- 
         sub_queries = self.decompose_query(query)
         print(f"Processed Queries: {sub_queries}")
         
         all_results = {}
         
-
         limit_per_query = max(5, k // len(sub_queries) + 1)
         
         for q in sub_queries:
-       
             docs = self.vectorstore.similarity_search_with_score(q, k=limit_per_query)
             
             for doc, score in docs:
@@ -99,7 +109,6 @@ class SHLRecommender:
         return sorted_results[:k]
 
 if __name__ == "__main__":
-   
     rec = SHLRecommender()
     res = rec.get_recommendations("Need a Java developer who is good in collaborating")
     import pandas as pd
