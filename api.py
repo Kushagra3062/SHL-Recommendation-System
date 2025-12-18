@@ -2,13 +2,18 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from recommender import SHLRecommender
 import uvicorn
+from functools import lru_cache
 
 app = FastAPI(
     title="SHL Recommendation API",
     description="API for retrieving SHL assessment recommendations based on job descriptions."
 )
 
-engine = SHLRecommender()
+
+@lru_cache(maxsize=1)
+def get_engine():
+    print("Initializing SHL Engine (Lazy Loading)...")
+    return SHLRecommender()
 
 class QueryRequest(BaseModel):
     query: str
@@ -19,8 +24,7 @@ class Recommendation(BaseModel):
 
 @app.get("/health")
 def health_check():
-    """Simple health check endpoint."""
-    return {"status": "healthy", "service": "SHL Recommendation API"}
+    return {"status": "ok", "service": "SHL Recommendation API"}
 
 @app.post("/recommend")
 def recommend(request: QueryRequest):
@@ -31,8 +35,10 @@ def recommend(request: QueryRequest):
         raise HTTPException(status_code=400, detail="Query cannot be empty")
     
     try:
-        results = engine.get_recommendations(request.query, k=10)
         
+        engine = get_engine()
+        
+        results = engine.get_recommendations(request.query, k=10)
         
         response_data = [
             {
@@ -44,10 +50,6 @@ def recommend(request: QueryRequest):
         return response_data
         
     except Exception as e:
-        
         print(f"Server Error: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error processing recommendation")
 
-@app.get("/health")
-def health_check():
-    return {"status": "ok"}
