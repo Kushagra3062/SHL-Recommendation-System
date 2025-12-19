@@ -12,8 +12,11 @@ RUN mkdir -p /app/model_cache
 
 RUN python preload_model.py
 
+RUN chmod -R 777 /app/model_cache
 
-RUN ls -la /app/model_cache
+RUN chmod 777 /app
+
+ENV SENTENCE_TRANSFORMERS_HOME=/app/model_cache
 
 EXPOSE 10000
 
