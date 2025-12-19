@@ -1,9 +1,9 @@
-from sentence_transformers import SentenceTransformer
+from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 import os
 
-model_path = "./model_cache"
+model_path = "./fastembed_cache"
 
 
 print("Downloading model for build...")
-model = SentenceTransformer('all-MiniLM-L6-v2', cache_folder=model_path)
+model = FastEmbedEmbeddings(model_name="BAAI/bge-small-en-v1.5")
 print("Model downloaded successfully!")

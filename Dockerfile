@@ -17,4 +17,4 @@ ENV SENTENCE_TRANSFORMERS_HOME=/app/model_cache
 EXPOSE 10000
 
 
-CMD uvicorn api:app --host 0.0.0.0 --port $PORT
+CMD ["sh", "-c", "uvicorn api:app --host 0.0.0.0 --port $PORT"]

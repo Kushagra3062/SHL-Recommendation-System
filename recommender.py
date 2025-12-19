@@ -1,7 +1,6 @@
 import os
 import json
 from dotenv import load_dotenv
-from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings 
 from langchain_pinecone import PineconeVectorStore
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -21,7 +20,8 @@ def get_cached_embeddings():
 
     return FastEmbedEmbeddings(
         api_key=api_key,
-        model_name="BAAI/bge-small-en-v1.5"
+        model_name="BAAI/bge-small-en-v1.5",
+        cache_dir="./fastembed_cache"
     )
 
 class SHLRecommender:

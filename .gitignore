@@ -2,3 +2,4 @@
 __pycache__/
 shl_venv/
 venv/
+fastembed_cache/
