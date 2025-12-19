@@ -4,6 +4,7 @@ streamlit
 python-dotenv
 pandas
 openpyxl
+huggingface_hub
 langchain-google-genai
 langchain-huggingface
 langchain-community
@@ -15,3 +16,4 @@ beautifulsoup4
 selenium
 webdriver-manager
 sentence-transformers
+fastembed

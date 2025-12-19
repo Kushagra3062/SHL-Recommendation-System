@@ -1,7 +1,8 @@
 import os
 import json
 from dotenv import load_dotenv
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceInferenceAPIEmbeddings
+from langchain_community.embeddings.fastembed import FastEmbedEmbeddings 
 from langchain_pinecone import PineconeVectorStore
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
@@ -10,19 +11,18 @@ from functools import lru_cache
 
 load_dotenv()
 
-
 @lru_cache(maxsize=1)
 def get_cached_embeddings():
-    print("Loading embedding model...")
- 
-    model_path = "./model_cache"
-    if os.path.exists(model_path) and len(os.listdir(model_path)) > 0:
-        print(f"Found local model at {model_path}, loading from disk...")
-        return HuggingFaceEmbeddings(model_name=model_path)
-    else:
-        print("Local model not found, downloading from HuggingFace (Fallback)...")
-        
-        return HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+    print("Loading Hugging Face API Embeddings (Lightweight)...")
+    
+    api_key = os.getenv("HUGGINGFACEHUB_API_TOKEN")
+    if not api_key:
+        raise ValueError("HUGGINGFACEHUB_API_TOKEN is missing from environment variables!")
+
+    return FastEmbedEmbeddings(
+        api_key=api_key,
+        model_name="BAAI/bge-small-en-v1.5"
+    )
 
 class SHLRecommender:
     def __init__(self):
@@ -30,7 +30,6 @@ class SHLRecommender:
         self.pinecone_api_key = os.getenv("PINECONE_API_KEY")
         self.google_api_key = os.getenv("GOOGLE_API_KEY")
         
-  
         self.embeddings = get_cached_embeddings()
         
         self.vectorstore = PineconeVectorStore(
@@ -40,7 +39,7 @@ class SHLRecommender:
         )
         
         self.llm = ChatGoogleGenerativeAI(
-            model="gemini-2.5-flash", 
+            model="gemini-2.5-flash",
             temperature=0.0,
             max_tokens=200,
             google_api_key=self.google_api_key
@@ -48,7 +47,7 @@ class SHLRecommender:
 
     def decompose_query(self, query):
         """
-        Robustly splits query using a pipe delimiter instead of brittle JSON.
+        Robustly splits query using a pipe delimiter.
         """
         template = """
         You are an expert HR assistant. Analyze the user's hiring requirement.
@@ -91,19 +90,22 @@ class SHLRecommender:
         limit_per_query = max(5, k // len(sub_queries) + 1)
         
         for q in sub_queries:
-            docs = self.vectorstore.similarity_search_with_score(q, k=limit_per_query)
-            
-            for doc, score in docs:
-                url = doc.metadata.get('url')
-            
-                if url and url not in all_results:
-                    all_results[url] = {
-                        "Assessment Name": doc.metadata.get('name', 'Unknown'),
-                        "URL": url,
-                        "Type": doc.metadata.get('test_type_full', 'General'),
-                        "Score": score,
-                        "Matched Query": q 
-                    }
+            try:
+                docs = self.vectorstore.similarity_search_with_score(q, k=limit_per_query)
+                
+                for doc, score in docs:
+                    url = doc.metadata.get('url')
+                
+                    if url and url not in all_results:
+                        all_results[url] = {
+                            "Assessment Name": doc.metadata.get('name', 'Unknown'),
+                            "URL": url,
+                            "Type": doc.metadata.get('test_type_full', 'General'),
+                            "Score": score,
+                            "Matched Query": q 
+                        }
+            except Exception as e:
+                print(f"Search error for query '{q}': {e}")
   
         sorted_results = sorted(all_results.values(), key=lambda x: x['Score'], reverse=True)
         return sorted_results[:k]
