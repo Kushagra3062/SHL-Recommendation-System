@@ -8,11 +8,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+RUN mkdir -p /app/model_cache
 
 RUN python preload_model.py
 
 
-ENV SENTENCE_TRANSFORMERS_HOME=/app/fastembed_cache
+RUN ls -la /app/model_cache
 
 EXPOSE 10000
 

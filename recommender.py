@@ -17,11 +17,12 @@ def get_cached_embeddings():
     api_key = os.getenv("HUGGINGFACEHUB_API_TOKEN")
     if not api_key:
         raise ValueError("HUGGINGFACEHUB_API_TOKEN is missing from environment variables!")
-
+    
+    model_path = "/app/model_cache"
     return FastEmbedEmbeddings(
         api_key=api_key,
         model_name="BAAI/bge-small-en-v1.5",
-        cache_dir="./fastembed_cache"
+        cache_dir=model_path
     )
 
 class SHLRecommender:
