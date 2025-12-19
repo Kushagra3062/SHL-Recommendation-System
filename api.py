@@ -24,7 +24,7 @@ class Recommendation(BaseModel):
 
 @app.get("/health")
 def health_check():
-    return {"status": "ok", "service": "SHL Recommendation API"}
+    return {"status": "Active", "service": "SHL Recommendation API"}
 
 @app.post("/recommend")
 def recommend(request: QueryRequest):
