@@ -12,6 +12,8 @@ RUN mkdir -p /app/model_cache
 
 RUN python preload_model.py
 
+ENV HOME=/tmp
+
 RUN chmod -R 777 /app/model_cache
 
 RUN chmod 777 /app
